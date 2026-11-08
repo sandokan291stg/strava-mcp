@@ -22,6 +22,7 @@ import { listAthleteRoutesTool } from './tools/listAthleteRoutes.js';
 import { getRouteTool } from './tools/getRoute.js';
 import { exportRouteGpx } from './tools/exportRouteGpx.js';
 import { exportRouteTcx } from './tools/exportRouteTcx.js';
+import { exportWorkoutErg } from './tools/exportWorkoutErg.js';
 import { getActivityStreamsTool } from './tools/getActivityStreams.js';
 import { getActivityLapsTool } from './tools/getActivityLaps.js';
 import { getAthleteZonesTool } from './tools/getAthleteZones.js';
@@ -146,6 +147,13 @@ server.tool(
     exportRouteTcx.description,
     exportRouteTcx.inputSchema?.shape ?? {},
     exportRouteTcx.execute
+);
+// --- Register export-workout-erg tool ---
+server.tool(
+    exportWorkoutErg.name,
+    exportWorkoutErg.description,
+    exportWorkoutErg.inputSchema?.shape ?? {},
+    exportWorkoutErg.execute
 );
 server.tool(
     getActivityStreamsTool.name,
