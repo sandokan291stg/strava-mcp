@@ -54,7 +54,28 @@ function generateErgContent(
 ): string {
     const fileName = `${dateStr}_${safeName}.erg`;
 
-    const lines: string[] = [
+    // ERG course data: a line's minute marks where that watt level STARTS.
+    // So the first line is always "0\t<watt of first block>" (every ERG ramp
+    // begins at minute 0), and a new line is written only where the watt
+    // changes. Consecutive blocks at the same watt are therefore merged,
+    // which matches how trainers/erg programs interpret the file.
+    if (blocks.length === 0) {
+        return "";
+    }
+
+    const [firstDuration, firstWatt] = blocks[0]!;
+    let previousWatt = firstWatt;
+    let minutes = firstDuration;
+    let data = ["0\t" + firstWatt];
+    for (const [duration, watt] of blocks.slice(1)) {
+        minutes += duration;
+        if (watt !== previousWatt) {
+            data.push(`${formatMinutes(minutes)}\t${watt}`);
+            previousWatt = watt;
+        }
+    }
+
+    const lines = [
         "[COURSE HEADER]",
         "VERSION = 2",
         "UNITS = ENGLISH",
@@ -64,15 +85,9 @@ function generateErgContent(
         "MINUTES WATTS",
         "[END COURSE HEADER]",
         "[COURSE DATA]",
+        ...data,
+        "[END COURSE DATA]",
     ];
-
-    let cumulative = 0;
-    for (const [duration, watt] of blocks) {
-        cumulative += duration;
-        lines.push(`${formatMinutes(cumulative)}\t${watt}`);
-    }
-
-    lines.push("[END COURSE DATA]");
 
     return lines.join("\n") + "\n";
 }
