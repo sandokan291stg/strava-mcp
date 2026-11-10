@@ -54,25 +54,17 @@ function generateErgContent(
 ): string {
     const fileName = `${dateStr}_${safeName}.erg`;
 
-    // ERG course data: a line's minute marks where that watt level STARTS.
-    // So the first line is always "0\t<watt of first block>" (every ERG ramp
-    // begins at minute 0), and a new line is written only where the watt
-    // changes. Consecutive blocks at the same watt are therefore merged,
-    // which matches how trainers/erg programs interpret the file.
-    if (blocks.length === 0) {
-        return "";
-    }
-
-    const [firstDuration, firstWatt] = blocks[0]!;
-    let previousWatt = firstWatt;
-    let minutes = firstDuration;
-    let data = ["0\t" + firstWatt];
-    for (const [duration, watt] of blocks.slice(1)) {
-        minutes += duration;
-        if (watt !== previousWatt) {
-            data.push(`${formatMinutes(minutes)}\t${watt}`);
-            previousWatt = watt;
-        }
+    // ERG course data: one line per block. The minute value is the CUMULATIVE
+    // time at which that block's watt level STARTS. Every ERG ramp begins at
+    // minute 0, so the first line is always "0\t<watt of first block>". A line
+    // is emitted for every block in sequence (no merging) — if two adjacent
+    // blocks share a watt you simply get the same watt at two successive
+    // start-times, which the erg program treats as one continuous segment.
+    let cumulative = 0;
+    const data: string[] = [];
+    for (const [duration, watt] of blocks) {
+        data.push(`${formatMinutes(cumulative)}\t${watt}`);
+        cumulative += duration;
     }
 
     const lines = [
